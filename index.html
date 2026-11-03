@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<title>访客门禁二维码申请</title>
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --danger: #dc2626;
+    --text: #1f2937;
+    --text-light: #6b7280;
+    --bg: #f3f4f6;
+    --card: #ffffff;
+    --border: #d1d5db;
+    --radius: 14px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { display: none; min-height: 100vh; min-height: 100dvh; }
+  .page.active { display: block; }
+
+  /* ===== 顶部 ===== */
+  .header {
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    color: #fff;
+    padding: max(28px, env(safe-area-inset-top)) 20px 32px;
+    border-radius: 0 0 24px 24px;
+    text-align: center;
+  }
+  .header .logo {
+    width: 52px; height: 52px; border-radius: 14px;
+    background: rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; margin-bottom: 14px;
+  }
+  .header h1 { font-size: 22px; font-weight: 600; }
+  .header p { font-size: 13px; opacity: .85; margin-top: 6px; }
+
+  .container { padding: 20px 16px max(32px, env(safe-area-inset-bottom)); max-width: 480px; margin: 0 auto; }
+  .header + .container { margin-top: -18px; }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.06);
+  }
+
+  /* ===== 首页 ===== */
+  .home-hero { text-align: center; padding: 40px 20px 28px; }
+  .home-hero .icon {
+    width: 84px; height: 84px; margin: 0 auto 18px;
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border-radius: 24px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px;
+  }
+  .home-hero h2 { font-size: 18px; margin-bottom: 8px; }
+  .home-hero p { font-size: 13px; color: var(--text-light); line-height: 1.7; }
+
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%;
+    padding: 15px 20px;
+    border: none; border-radius: 12px;
+    font-size: 16px; font-weight: 600;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #fff;
+    cursor: pointer;
+    transition: opacity .2s, transform .1s;
+    font-family: inherit;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn[disabled] {
+    background: #cbd5e1;
+    cursor: not-allowed;
+  }
+  .btn-ghost {
+    background: #fff; color: var(--primary);
+    border: 1px solid #bfdbfe;
+    margin-top: 12px;
+  }
+
+  /* ===== 表单 ===== */
+  .back-link {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 14px; color: var(--text-light);
+    background: none; border: none; cursor: pointer;
+    padding: 8px 4px; margin-bottom: 8px;
+    font-family: inherit;
+  }
+  .form-title { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+  .form-sub { font-size: 13px; color: var(--text-light); margin-bottom: 22px; }
+
+  .field { margin-bottom: 20px; }
+  .field label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+  .field label .req { color: var(--danger); margin-left: 2px; }
+  .field input, .field select {
+    width: 100%;
+    padding: 13px 14px;
+    font-size: 16px; /* >=16px 防 iOS 聚焦自动放大 */
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--text);
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+    appearance: none; -webkit-appearance: none;
+    font-family: inherit;
+  }
+  .field select {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236b7280' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+  .field select:invalid { color: #9ca3af; }
+  .field input:focus, .field select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+  }
+  .field.error input, .field.error select {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px rgba(220,38,38,.10);
+  }
+  .err-msg {
+    display: none;
+    font-size: 12.5px; color: var(--danger);
+    margin-top: 6px;
+    align-items: center; gap: 4px;
+  }
+  .field.error .err-msg { display: flex; }
+
+  /* 顶部提交警告 toast */
+  .toast {
+    position: fixed;
+    left: 50%; bottom: max(80px, env(safe-area-inset-bottom));
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(17,24,39,.92);
+    color: #fff;
+    font-size: 14px;
+    padding: 11px 20px;
+    border-radius: 10px;
+    opacity: 0; pointer-events: none;
+    transition: opacity .25s, transform .25s;
+    z-index: 99;
+    max-width: 86vw; text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ===== 成功页 ===== */
+  .success-badge {
+    width: 68px; height: 68px; margin: 26px auto 16px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px; color: #fff;
+    box-shadow: 0 6px 18px rgba(34,197,94,.35);
+  }
+  .success-title { text-align: center; font-size: 19px; font-weight: 600; }
+  .success-sub { text-align: center; font-size: 13px; color: var(--text-light); margin: 8px 0 20px; }
+  .floor-img {
+    width: 100%;
+    border-radius: 12px;
+    display: block;
+    background: #e5e7eb;
+    min-height: 220px;
+    object-fit: cover;
+  }
+  .img-caption {
+    text-align: center; font-size: 13px; color: var(--text-light);
+    margin-top: 10px;
+  }
+  .img-fallback {
+    display: none;
+    padding: 46px 20px;
+    text-align: center;
+    background: #f9fafb;
+    border: 1.5px dashed var(--border);
+    border-radius: 12px;
+    color: var(--text-light);
+    font-size: 14px; line-height: 1.8;
+  }
+
+  @media (min-width: 480px) {
+    .header { border-radius: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ========== 首页 ========== -->
+<div class="page active" id="page-home">
+  <div class="header">
+    <h1>中科纳能大厦欢迎您</h1>
+    <p>线上申请 · 快捷通行</p>
+  </div>
+  <div class="container">
+    <div class="card home-hero">
+      <div class="icon">📱</div>
+      <h2>温馨提示</h2>
+      <p>请如实填写访客信息并选择被访人楼层，<br>提交后即可获取对应楼层的通行二维码图片。</p>
+    </div>
+    <div style="margin-top:16px">
+      <button class="btn" id="btn-go-form">📋 访客通行二维码申请</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 表单页 ========== -->
+<div class="page" id="page-form">
+  <div class="header" style="padding-bottom:24px">
+    <div class="logo">📝</div>
+    <h1>填写申请信息</h1>
+    <p>请确保信息准确无误</p>
+  </div>
+  <div class="container">
+    <div class="card">
+      <button class="back-link" id="btn-back">‹ 返回首页</button>
+      <div class="form-title">访客信息登记</div>
+      <div class="form-sub">带 <span style="color:var(--danger)">*</span> 为必填项</div>
+
+      <form id="visitor-form" novalidate>
+        <div class="field" id="field-name">
+          <label for="name">访客姓名<span class="req">*</span></label>
+          <input type="text" id="name" name="name" placeholder="请输入访客姓名" maxlength="20" autocomplete="name">
+          <div class="err-msg">⚠ 访客姓名不能为空</div>
+        </div>
+
+        <div class="field" id="field-phone">
+          <label for="phone">手机号码<span class="req">*</span></label>
+          <input type="tel" id="phone" name="phone" placeholder="请输入11位手机号码" maxlength="11" inputmode="numeric" autocomplete="tel">
+          <div class="err-msg" id="phone-err">⚠ 请输入有效的11位中国大陆手机号</div>
+        </div>
+
+        <div class="field" id="field-floor">
+          <label for="floor">被访人楼层<span class="req">*</span></label>
+          <select id="floor" name="floor" required>
+            <option value="" selected disabled>请选择楼层</option>
+            <option value="1">1 层</option>
+            <option value="2">2 层</option>
+            <option value="3">3 层</option>
+            <option value="4">4 层</option>
+            <option value="5">5 层</option>
+            <option value="6">6 层</option>
+            <option value="7">7 层</option>
+            <option value="8">8 层</option>
+          </select>
+          <div class="err-msg">⚠ 请选择被访人楼层</div>
+        </div>
+
+        <button type="submit" class="btn" id="btn-submit" disabled>提交申请</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 成功/图片展示页 ========== -->
+<div class="page" id="page-result">
+  <div class="header" style="padding-bottom:24px">
+    <div class="logo">✅</div>
+    <h1>申请提交成功</h1>
+    <p>通行二维码已生成</p>
+  </div>
+  <div class="container">
+    <div class="card">
+      <div class="success-badge">✓</div>
+      <div class="success-title" id="result-name"></div>
+      <div class="success-sub" id="result-info"></div>
+
+      <img class="floor-img" id="floor-img" alt="楼层二维码">
+      <div class="img-fallback" id="img-fallback">
+        🖼️<br>
+        <b id="fallback-floor"></b> 楼层二维码图片<br>
+        路径：<code id="fallback-path"></code><br>
+        请将图片放入该路径后刷新本页
+      </div>
+      <div class="img-caption" id="img-caption"></div>
+
+      <button class="btn" id="btn-again">重新申请</button>
+      <button class="btn btn-ghost" id="btn-home">返回首页</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var IMG_PATH = 'images/floor'; // 楼层图片路径前缀，图片为 images/floor1.jpg ~ images/floor8.jpg
+
+  // —— 页面切换 ——
+  var pages = { home: document.getElementById('page-home'), form: document.getElementById('page-form'), result: document.getElementById('page-result') };
+  function show(name) {
+    Object.keys(pages).forEach(function (k) { pages[k].classList.toggle('active', k === name); });
+    window.scrollTo(0, 0);
+  }
+
+  // —— toast ——
+  var toast = document.getElementById('toast'), toastTimer = null;
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 2200);
+  }
+
+  // —— 首页跳转 ——
+  document.getElementById('btn-go-form').addEventListener('click', function () { show('form'); });
+  document.getElementById('btn-back').addEventListener('click', function () { show('home'); });
+
+  // —— 表单元素 ——
+  var form = document.getElementById('visitor-form');
+  var nameInput = document.getElementById('name');
+  var phoneInput = document.getElementById('phone');
+  var floorSelect = document.getElementById('floor');
+  var btnSubmit = document.getElementById('btn-submit');
+
+  var PHONE_RE = /^1[3-9]\d{9}$/; // 中国大陆 11 位手机号
+
+  function setError(fieldId, msg) {
+    var f = document.getElementById(fieldId);
+    f.classList.add('error');
+    if (msg) f.querySelector('.err-msg').textContent = msg;
+  }
+  function clearError(fieldId) {
+    document.getElementById(fieldId).classList.remove('error');
+  }
+  function clearAllErrors() {
+    ['field-name', 'field-phone', 'field-floor'].forEach(clearError);
+  }
+
+  // —— 输入框获得焦点时清除该字段的错误提示 ——
+  nameInput.addEventListener('focus', function () { clearError('field-name'); });
+  phoneInput.addEventListener('focus', function () { clearError('field-phone'); });
+  floorSelect.addEventListener('focus', function () { clearError('field-floor'); });
+  floorSelect.addEventListener('change', function () { clearError('field-floor'); refreshSubmitState(); });
+  nameInput.addEventListener('input', refreshSubmitState);
+  phoneInput.addEventListener('input', function () {
+    phoneInput.value = phoneInput.value.replace(/\D/g, '').slice(0, 11); // 只留数字
+    refreshSubmitState();
+  });
+
+  // —— 完整性检查：决定提交按钮是否禁用 ——
+  function isFormComplete() {
+    return nameInput.value.trim() !== '' &&
+           PHONE_RE.test(phoneInput.value.trim()) &&
+           floorSelect.value !== '';
+  }
+  function refreshSubmitState() {
+    btnSubmit.disabled = !isFormComplete();
+  }
+
+  // —— 提交 ——
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    clearAllErrors();
+
+    var ok = true, firstBad = null;
+    var name = nameInput.value.trim();
+    var phone = phoneInput.value.trim();
+    var floor = floorSelect.value;
+
+    if (!name) { setError('field-name'); ok = false; firstBad = firstBad || nameInput; }
+    if (!phone) { setError('field-phone', '⚠ 手机号码不能为空'); ok = false; firstBad = firstBad || phoneInput; }
+    else if (!PHONE_RE.test(phone)) { setError('field-phone'); ok = false; firstBad = firstBad || phoneInput; }
+    if (!floor) { setError('field-floor'); ok = false; firstBad = firstBad || floorSelect; }
+
+    if (!ok) {
+      showToast('请完善表单后再提交');
+      if (firstBad) firstBad.focus();
+      return;
+    }
+
+    showResult(name, phone, floor);
+  });
+
+  // —— 结果页 ——
+  var floorImg = document.getElementById('floor-img');
+  var imgFallback = document.getElementById('img-fallback');
+
+  function showResult(name, phone, floor) {
+    document.getElementById('result-name').textContent = name + '，您的通行码如下';
+    document.getElementById('result-info').textContent = '手机号 ' + phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') + ' · 被访楼层 ' + floor + ' 层';
+
+    var src = IMG_PATH + floor + '.jpg';
+    imgFallback.style.display = 'none';
+    floorImg.style.display = 'block';
+    floorImg.onerror = function () {
+      // 图片不存在时展示占位提示
+      floorImg.style.display = 'none';
+      document.getElementById('fallback-floor').textContent = floor;
+      document.getElementById('fallback-path').textContent = src;
+      imgFallback.style.display = 'block';
+    };
+    floorImg.src = src;
+    document.getElementById('img-caption').textContent = '第 ' + floor + ' 层 · 门禁通行二维码';
+
+    show('result');
+  }
+
+  document.getElementById('btn-again').addEventListener('click', function () {
+    form.reset();
+    clearAllErrors();
+    refreshSubmitState();
+    show('form');
+    nameInput.focus();
+  });
+  document.getElementById('btn-home').addEventListener('click', function () {
+    form.reset();
+    clearAllErrors();
+    refreshSubmitState();
+    show('home');
+  });
+
+  refreshSubmitState();
+})();
+</script>
+</body>
+</html>
